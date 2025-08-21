@@ -1,0 +1,13 @@
+{
+    "name": "com.llarean.audiomanager-lite",
+    "version": "1.0.0",
+    "displayName": "Audio Manager Lite",
+    "description": "Lightweight audio management system for Unity with categories, pooling, and fade effects.",
+    "unity": "2020.3",
+    "keywords": ["audio", "sound", "manager", "music"],
+    "author": {
+        "name": "LLarean",
+        "email": "llarean@ya.ru"
+    },
+    "dependencies": {}
+}
