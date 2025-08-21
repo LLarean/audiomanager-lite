@@ -76,7 +76,9 @@ namespace AudioManagerLite
 
         private void InitializeComponents()
         {
-            _sourcePool = new AudioSourcePool(transform, _settings.initialPoolSize, _settings.maxPoolSize);
+            _sourcePool = new AudioSourcePool(transform, _settings.maxPoolSize);
+            _sourcePool.Prewarm(_settings.initialPoolSize);
+            
             _volumeController = new AudioVolumeController(_settings);
             _effectHandler = gameObject.AddComponent<AudioEffectHandler>();
         }
@@ -199,7 +201,7 @@ namespace AudioManagerLite
         {
             if (clip == null) return null;
 
-            var source = _sourcePool.GetSource();
+            var source = _sourcePool.Get();
             if (source == null) 
             {
                 Debug.LogWarning("[AudioSystem] No available audio sources. Consider increasing pool size.");
@@ -234,7 +236,7 @@ namespace AudioManagerLite
             if (source != null)
             {
                 _activeSources[category].Remove(source);
-                _sourcePool.ReturnSource(source);
+                _sourcePool.Return(source);
             }
         }
 
@@ -304,19 +306,19 @@ namespace AudioManagerLite
 
         #endregion
 
-        #region Debug Info
-
-        [System.Diagnostics.Conditional("UNITY_EDITOR")]
-        public void LogDebugInfo()
-        {
-            Debug.Log($"[AudioSystem] Active sources: {_sourcePool.ActiveSourcesCount}, Available: {_sourcePool.AvailableSourcesCount}");
-            
-            foreach (var kvp in _activeSources)
-            {
-                Debug.Log($"[AudioSystem] {kvp.Key}: {kvp.Value.Count} active sources");
-            }
-        }
-
-        #endregion
+        // #region Debug Info
+        //
+        // [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        // public void LogDebugInfo()
+        // {
+        //     Debug.Log($"[AudioSystem] Active sources: {_sourcePool.ActiveSourcesCount}, Available: {_sourcePool.AvailableSourcesCount}");
+        //     
+        //     foreach (var kvp in _activeSources)
+        //     {
+        //         Debug.Log($"[AudioSystem] {kvp.Key}: {kvp.Value.Count} active sources");
+        //     }
+        // }
+        //
+        // #endregion
     }
 }

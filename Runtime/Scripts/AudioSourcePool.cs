@@ -4,89 +4,119 @@ using System.Collections.Generic;
 namespace AudioManagerLite
 {
     /// <summary>
-    /// Manages pooling of AudioSource components for performance optimization
+    /// Manages pooling of AudioSource components for performance optimization.
     /// </summary>
-    public class AudioSourcePool
+    public sealed class AudioSourcePool
     {
         private readonly Queue<AudioSource> _availableSources = new Queue<AudioSource>();
-        private readonly Transform _parent;
+        private readonly Transform _parentTransform;
         private readonly int _maxPoolSize;
-        
-        public int ActiveSourcesCount => _parent.childCount - _availableSources.Count;
-        public int AvailableSourcesCount => _availableSources.Count;
 
-        public AudioSourcePool(Transform parent, int initialSize, int maxSize)
+        /// <summary>
+        /// Gets the number of available audio sources in the pool.
+        /// </summary>
+        public int AvailableCount => _availableSources.Count;
+
+        /// <summary>
+        /// Gets the total number of audio sources in the pool.
+        /// </summary>
+        public int TotalCount { get; private set; }
+
+        public AudioSourcePool(Transform parentTransform, int maxSize)
         {
-            _parent = parent;
+            _parentTransform = parentTransform;
             _maxPoolSize = maxSize;
-            
-            PrewarmPool(initialSize);
         }
 
-        public AudioSource GetSource()
+        /// <summary>
+        /// Gets an available AudioSource from the pool.
+        /// </summary>
+        public AudioSource Get()
         {
-            if (_availableSources.Count == 0)
+            if (_availableSources.Count > 0)
             {
-                if (_parent.childCount >= _maxPoolSize)
-                {
-                    return RecycleOldestInactiveSource();
-                }
-                CreateNewSource();
+                return _availableSources.Dequeue();
             }
-            
-            return _availableSources.Dequeue();
+
+            if (TotalCount < _maxPoolSize)
+            {
+                return CreateNewSource();
+            }
+
+            Debug.LogWarning($"[AudioSourcePool] All {_maxPoolSize} sources are in use");
+            return null;
         }
 
-        public void ReturnSource(AudioSource source)
+        /// <summary>
+        /// Returns an AudioSource to the pool for reuse.
+        /// </summary>
+        public void Return(AudioSource source)
         {
             if (source == null) return;
-            
+
             ResetSource(source);
             _availableSources.Enqueue(source);
         }
 
-        private void PrewarmPool(int count)
+        /// <summary>
+        /// Creates the initial pool of audio sources.
+        /// </summary>
+        public void Prewarm(int count)
         {
+            count = Mathf.Min(count, _maxPoolSize - TotalCount);
             for (int i = 0; i < count; i++)
             {
                 CreateNewSource();
             }
         }
 
+        /// <summary>
+        /// Clears all audio sources from the pool.
+        /// </summary>
+        public void Clear()
+        {
+            while (_availableSources.Count > 0)
+            {
+                var source = _availableSources.Dequeue();
+                if (source != null && source.gameObject != null)
+                {
+                    Object.Destroy(source.gameObject);
+                }
+            }
+            TotalCount = 0;
+        }
+
         private AudioSource CreateNewSource()
         {
-            var sourceObject = new GameObject("PooledAudioSource");
-            sourceObject.transform.SetParent(_parent);
+            var go = new GameObject($"AudioSource_{TotalCount + 1:00}");
+            go.transform.SetParent(_parentTransform, false);
             
-            var source = sourceObject.AddComponent<AudioSource>();
-            source.playOnAwake = false;
+            var source = go.AddComponent<AudioSource>();
+            ConfigureSource(source);
             
             _availableSources.Enqueue(source);
+            TotalCount++;
+            
             return source;
         }
 
-        private AudioSource RecycleOldestInactiveSource()
+        private static void ConfigureSource(AudioSource source)
         {
-            for (int i = 0; i < _parent.childCount; i++)
-            {
-                var source = _parent.GetChild(i).GetComponent<AudioSource>();
-                if (source != null && !source.isPlaying)
-                {
-                    return source;
-                }
-            }
-            return null; // All sources are busy
+            source.playOnAwake = false;
+            source.loop = false;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.spatialBlend = 0f;
         }
 
-        private void ResetSource(AudioSource source)
+        private static void ResetSource(AudioSource source)
         {
             source.Stop();
             source.clip = null;
             source.loop = false;
             source.volume = 1f;
             source.pitch = 1f;
-            source.spatialBlend = 0f;
-            source.transform.localPosition = Vector3.zero;
+            source.time = 0f;
         }
     }
 }
