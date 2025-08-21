@@ -24,11 +24,10 @@ namespace AudioManagerLite
             }
         }
 
-        [Header("Configuration")]
         [SerializeField] private AudioSettings _settings;
 
         private AudioSourcePool _sourcePool;
-        private AudioVolumeController _volumeController;
+        private AudioVolume _volume;
         private AudioEffectHandler _effectHandler;
         private readonly Dictionary<AudioCategory, List<AudioSource>> _activeSources = new Dictionary<AudioCategory, List<AudioSource>>();
 
@@ -79,7 +78,7 @@ namespace AudioManagerLite
             _sourcePool = new AudioSourcePool(transform, _settings.maxPoolSize);
             _sourcePool.Prewarm(_settings.initialPoolSize);
             
-            _volumeController = new AudioVolumeController(_settings);
+            _volume = new AudioVolume(_settings);
             _effectHandler = gameObject.AddComponent<AudioEffectHandler>();
         }
 
@@ -135,7 +134,7 @@ namespace AudioManagerLite
             var source = Play(clip, category, false, 0f);
             if (source != null)
             {
-                float targetVolume = Instance._volumeController.GetCategoryVolume(category);
+                float targetVolume = Instance._volume.GetCategoryVolume(category);
                 Instance._effectHandler.FadeIn(source, fadeTime, targetVolume);
             }
             return source;
@@ -153,24 +152,24 @@ namespace AudioManagerLite
 
         public static void SetCategoryVolume(AudioCategory category, float volume)
         {
-            Instance._volumeController.SetCategoryVolume(category, volume);
+            Instance._volume.SetCategoryVolume(category, volume);
             Instance.UpdateActiveSources(category);
         }
 
         public static float GetCategoryVolume(AudioCategory category)
         {
-            return Instance._volumeController.GetCategoryVolume(category);
+            return Instance._volume.GetCategoryVolume(category);
         }
 
         public static void SetCategoryMute(AudioCategory category, bool muted)
         {
-            Instance._volumeController.SetCategoryMute(category, muted);
+            Instance._volume.SetCategoryMute(category, muted);
             Instance.UpdateActiveSources(category);
         }
 
         public static bool IsCategoryMuted(AudioCategory category)
         {
-            return Instance._volumeController.IsCategoryMuted(category);
+            return Instance._volume.IsCategoryMuted(category);
         }
 
         public static void StopAll()
@@ -225,7 +224,7 @@ namespace AudioManagerLite
         {
             source.clip = clip;
             source.loop = loop;
-            source.volume = volume * _volumeController.GetCategoryVolume(category);
+            source.volume = volume * _volume.GetCategoryVolume(category);
             source.spatialBlend = 0f; // 2D by default
         }
 
@@ -244,7 +243,7 @@ namespace AudioManagerLite
         {
             if (_activeSources.ContainsKey(category))
             {
-                _volumeController.ApplyVolumeToSources(category, _activeSources[category]);
+                _volume.ApplyVolumeToSources(category, _activeSources[category]);
             }
         }
 
@@ -305,20 +304,5 @@ namespace AudioManagerLite
         }
 
         #endregion
-
-        // #region Debug Info
-        //
-        // [System.Diagnostics.Conditional("UNITY_EDITOR")]
-        // public void LogDebugInfo()
-        // {
-        //     Debug.Log($"[AudioSystem] Active sources: {_sourcePool.ActiveSourcesCount}, Available: {_sourcePool.AvailableSourcesCount}");
-        //     
-        //     foreach (var kvp in _activeSources)
-        //     {
-        //         Debug.Log($"[AudioSystem] {kvp.Key}: {kvp.Value.Count} active sources");
-        //     }
-        // }
-        //
-        // #endregion
     }
 }

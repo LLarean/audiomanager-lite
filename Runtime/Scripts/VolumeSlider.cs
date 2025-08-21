@@ -21,7 +21,7 @@ namespace AudioManagerLite
         private void Start()
         {
             // Set initial value
-            slider.value = AudioPlayer.GetCategoryVolume(targetCategory);
+            slider.value = AudioSystem.GetCategoryVolume(targetCategory);
             
             // Subscribe to changes
             slider.onValueChanged.AddListener(OnVolumeChanged);
@@ -29,7 +29,7 @@ namespace AudioManagerLite
 
         private void OnVolumeChanged(float value)
         {
-            AudioPlayer.SetCategoryVolume(targetCategory, value);
+            AudioSystem.SetCategoryVolume(targetCategory, value);
         }
 
         private void OnDestroy()

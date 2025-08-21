@@ -12,15 +12,7 @@ namespace AudioManagerLite
         private readonly Transform _parentTransform;
         private readonly int _maxPoolSize;
 
-        /// <summary>
-        /// Gets the number of available audio sources in the pool.
-        /// </summary>
-        public int AvailableCount => _availableSources.Count;
-
-        /// <summary>
-        /// Gets the total number of audio sources in the pool.
-        /// </summary>
-        public int TotalCount { get; private set; }
+        private int TotalCount { get; set; }
 
         public AudioSourcePool(Transform parentTransform, int maxSize)
         {

@@ -24,7 +24,7 @@ namespace AudioManagerLite
         {
             if (soundClip != null)
             {
-                AudioPlayer.Play(soundClip, category, false, volume);
+                AudioSystem.Play(soundClip, category, false, volume);
             }
         }
 
