@@ -31,8 +31,8 @@ AudioManagerLite is a work-in-progress Unity package aimed at providing a straig
 ## Core Components (WIP)
 
 ## Roadmap (Tentative & Evolving)
-- [ ] Basic project structure and core component skeletons
-- [ ] Initial implementation of AudioSource pooling
+- [x] Basic project structure and core component skeletons
+- [x] Initial implementation of AudioSource pooling
 - [ ] Stable API for playing/stopping sounds
 - [ ] Audio Channel system for group control
 - [ ] Priority system to handle audio source contention
